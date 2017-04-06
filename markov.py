@@ -1,7 +1,11 @@
 import re
 import random
+from itertools import islice
 from pathlib import Path
 from collections import defaultdict, Counter, deque
+
+from termcolor import cprint
+
 
 def index_corpus(file):
     model = defaultdict(Counter)
@@ -37,9 +41,40 @@ def run_chain(model):
     return ' '.join(out)
 
 
+def play_game():
+    path = Path('newsspace_titles.txt')
+    model = index_corpus(path)
+    all_titles = {l.strip() for l in path.open(encoding='utf8')}
+    while True:
+        real = random.randint(0, 2) > 1
+        if real:
+            phrase = all_titles.pop()
+        else:
+            phrase = run_chain(model)
+            if phrase in all_titles:
+                real = True
+
+        cprint(phrase, 'cyan')
+        print()
+
+        while True:
+            print('Real or fake? [rf] ', end='')
+            answer = input().strip()
+            if answer in ('r', 'f'):
+                break
+
+        if real:
+            explanation = 'It was a real headline.'
+        else:
+            explanation = 'We made it up!'
+
+        if (answer == 'r') == real:
+            cprint('Correct! ' + explanation, 'green')
+        else:
+            cprint('Wrong! ' + explanation, 'red')
+        print()
+
+
 
 if __name__ == '__main__':
-    path = Path('phrases.txt')
-    model = index_corpus(path)
-    for _ in range(10):
-        print(run_chain(model))
+    play_game()
